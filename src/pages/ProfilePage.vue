@@ -2,7 +2,7 @@
 	<div>
 		<div class="container">
 			<div class="d-flex">
-				<div class="w-50 me-5">
+				<div class=" me-5 profile">
 					<h2>Profile</h2>
 					<div>
 						<message-vue v-if="error || message" :message="error || message" :type="'danger'" />
@@ -129,5 +129,10 @@ export default {
 <style scoped>
 label {
 	font-size: 14px;
+}
+
+.profile {
+	max-width: 400px;
+	width: 100%;
 }
 </style>
