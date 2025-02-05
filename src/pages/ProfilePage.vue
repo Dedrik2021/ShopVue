@@ -5,7 +5,7 @@
 				<div class=" me-5 profile">
 					<h2>Profile</h2>
 					<div>
-						<message-vue v-if="error || message" :message="error || message" :type="'danger'" />
+						<message-vue v-if="error || message" :message="error || message" :type="error ? 'danger' : 'success'" />
 
 						<div class="login-page">
 							<form @submit.prevent="submitHandler" class="shadow p-3 rounded">
@@ -47,7 +47,7 @@
 								</div>
                                 <button
                                     type="submit"
-                                    :disabled="status === 'pending'"
+                                    :disabled="status === 'pending' || userChanged"
                                     class="btn btn-primary"
                                 >
                                     <pulse-loader
@@ -97,16 +97,28 @@ export default {
 
 	computed: {
 		...mapGetters(['userInfo', 'user', 'error', 'status']),
+
+		userChanged() {
+			return this.name === this.userInfo.name && this.email === this.userInfo.email && this.password === '';
+		}
 	},
 
 	methods: {
-		...mapActions(['getUserInfo']),
+		...mapActions(['getUserInfo', 'updateProfile']),
 
-		submitHandler() {
+		async submitHandler() {
 			if (this.password !== this.confirmPassword) {
 				this.message = 'Passwords do not match';
 			} else {
-				console.log('updating user');
+
+				if (this.user.name !== this.name || this.user.email !== this.email || this.password !== '') {
+					await this.updateProfile({ name: this.name, email: this.email, password: this.password, token: this.user.token });
+					this.password = '';
+					this.confirmPassword = '';
+					this.message = 'Profile has been updated';
+				} else {
+					this.message = 'No changes were made';
+				}
 			}
 		},
 	},
@@ -123,12 +135,30 @@ export default {
 			}
 		}
 	},
+
+	watch: {
+		message() {
+			if (this.message) {
+				setTimeout(() => {
+					this.message = '';
+				}, 3000);
+			}
+		},
+
+		error() {
+			if (this.error) {
+				setTimeout(() => {
+					this.error = '';
+				}, 3000);
+			}
+		},
+	},
 };
 </script>
 
 <style scoped>
 label {
-	font-size: 14px;
+	font-size: 13px;
 }
 
 .profile {
