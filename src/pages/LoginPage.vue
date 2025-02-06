@@ -29,7 +29,7 @@
 						<span v-else>Login</span>
 					</button>
 					<div class="mx-3">
-						Dont have an account?
+						Don't have an account?
 						<router-link @click="clearItems" to="/register" class=" ">Register</router-link>
 					</div>
 				</div>
@@ -71,7 +71,7 @@ export default {
 	},
 
 	computed: {
-		...mapGetters([ 'error', 'status']),
+		...mapGetters([ 'error', 'status', 'lastLocation' ]),
 	},
 
 	methods: {
@@ -88,7 +88,7 @@ export default {
 			await this.loginUser({ username: this.email, password: this.password });
 			if (this.error) return
 			await this.clearItems();
-			this.$router.push('/?page=1');
+			this.$router.push(this.lastLocation ? this.lastLocation : '/?page=1');
 		},
 
 		clearItems() {
