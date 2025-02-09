@@ -1,5 +1,5 @@
 <template>
-	<div class="container-sm" :class="`alert alert-${type}`" role="alert">
+	<div class="container-sm py-1" :class="`alert alert-${type}`" role="alert">
 		{{ message }}
 	</div>
 </template>
