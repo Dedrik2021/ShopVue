@@ -1,60 +1,66 @@
 <template>
 	<div>
-		<div class="cart-page position-relative z-index-0">
+		<div class="cart-page position-relative z-index-0 container">
 			<h2 class="mb-4">Shopping Cart</h2>
 			<message-vue v-if="infoMessage" :message="infoMessage" :type="'success'" />
 			<div v-if="filteredCartItems.length === 0">
 				<p>Your cart is empty.</p>
 				<router-link to="/" class="btn btn-primary">Go Back</router-link>
 			</div>
-			<div v-else>
+			<div v-else class="d-flex">
 				<ul class="list-group mb-4 shadow">
-					<li class="list-group-item" v-for="item in filteredCartItems" :key="item.product">
-						<div class="row">
-							<div class="col-md-4">
+					<li
+						class="list-group-item"
+						v-for="item in filteredCartItems"
+						:key="item.product"
+					>
+						<div class="d-flex align-items-center">
+							<div class="col-md-2">
 								<img
 									:src="item.image"
-									height="150"
-									width="150"
+									height="100"
+									width="120"
 									alt="Product Image"
 									class="img-fluid"
 								/>
 							</div>
-							<div class="col-md-4">
+							<div class="col-md-6">
 								<router-link :to="`/product/${item._id}`">{{
 									item.name
 								}}</router-link>
 							</div>
-							<div class="col-md-2">
-								<p>${{ item.price }}</p>
+							<div class="col-md-2 d-flex align-items-center ">
+								<p class="mb-0">${{ item.price }}</p>
 							</div>
 							<div class="col-md-2">
-								<input
-									type="number"
-									class="form-control"
-									v-model.number="item.qty"
-									@change="(e) => updateQtyItem(e, item._id)"
-									min="1"
-									:max="item.countInStock"
-								/>
-								<div class="col-md-2 mt-2">
-									<button
-										class="btn btn-danger py-1"
-										@click="removeItem(item._id)"
-									>
-										Remove
-									</button>
+								<div class="d-flex align-items-center justify-content-center">
+
+									<input
+										type="number"
+										class="form-control"
+										v-model.number="item.qty"
+										@change="(e) => updateQtyItem(e, item._id)"
+										min="1"
+										:max="item.countInStock"
+									/>
+									<div class="col-md-2 mx-2">
+										<button
+											class="btn btn-danger py-1 px-2"
+											@click="removeItem(item._id)"
+										>
+											<i class="fa fa-trash"></i>
+										</button>
+									</div>
 								</div>
 							</div>
 						</div>
 					</li>
 				</ul>
-				<div class="cart-summary">
+				<div class="cart-summary shadow rounded">
 					<h3 class="">Subtotal: ({{ subtotal }}) items</h3>
 					<h3>Total: ${{ total }}</h3>
-					<button @click="checkoutHandler" type="button" class="btn btn-success">
-						Proceed to Checkout
-					</button>
+					
+					<b-button @click="checkoutHandler" type="button">Proceed to Checkout</b-button>
 				</div>
 			</div>
 		</div>
@@ -100,7 +106,9 @@ export default {
 		},
 
 		total() {
-			return Math.round(this.filteredCartItems.reduce((acc, item) => acc + item.qty * item.price, 0));
+			return Math.round(
+				this.filteredCartItems.reduce((acc, item) => acc + item.qty * item.price, 0),
+			);
 		},
 
 		subtotal() {
@@ -109,14 +117,18 @@ export default {
 	},
 	methods: {
 		...mapActions(['removeItemFromCart', 'clearInfoMessage']),
-		...mapMutations(['updateQtyItemInCart', 'setError', 'setCartItems']),
+		...mapMutations(['updateQtyItemInCart', 'setError', 'setCartItems', 'setCart']),
 
 		updateQtyItem(e, id) {
 			this.updateQtyItemInCart({ id: id, qty: e.target.value });
 		},
 
 		checkoutHandler() {
-			this.$router.push('/login?redirect=shipping');
+			if (this.user || this.user.name) {
+				this.$router.push('/shipping');
+			} else {
+				this.$router.push('/login');
+			}
 		},
 
 		removeItem(id) {
@@ -125,16 +137,17 @@ export default {
 			const info = this.filteredCartItems.find((item) => item._id === id);
 			this.infoDeleteItem = info.name;
 		},
-
+		
 		handleCancel() {
 			this.showModal = false;
 			this.deleteItem = null;
 			this.infoDeleteItem = '';
 		},
-
+		
 		async handleOk() {
 			await this.removeItemFromCart(this.deleteItem);
 			await this.handleCancel();
+			this.setCart()
 		},
 
 		loadCartItems() {
@@ -169,13 +182,26 @@ export default {
 </script>
 
 <style scoped>
+
+.list-group {
+	max-width: 70%;
+	width: 100%;
+	margin-right: 30px;
+}
+
 .cart-page {
-	max-width: 800px;
+	/* max-width: 800px; */
 	margin: 50px auto;
 }
 .cart-summary {
-	margin-top: 20px;
-	text-align: right;
+	/* margin-top: 20px; */
+	border: 1px solid #ccc;
+	/* text-align: right; */
+	padding: 10px;
+	max-width: 30%;
+	width: 100%;
+	text-align: center;
+	height: 100%;
 }
 
 .cart-modal {
@@ -204,5 +230,10 @@ export default {
 
 .cart-modal-content {
 	text-align: center;
+}
+
+.form-control {
+	height: 35px;
+	width: 60%;
 }
 </style>
