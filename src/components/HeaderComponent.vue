@@ -19,19 +19,23 @@
 							:class="{ disabled: $route.path === '/cart' }"
 							class="navbar-brand position-relative mx-4"
 							vue-transition
-							to="/cart"
-							><i class="fas fa-shopping-cart"></i>
+							:to="userLoggedIn ? '/cart' : '/login'"
+							><i class="fa fa-shopping-cart"></i>
 							<span
 								class="position-absolute top-10 py-0 px-1 start-100 translate-middle badge rounded-pill bg-danger"
-								v-if="filteredCartItems.length"
-								>{{ filteredCartItems.length }}</span
+								v-if="cartItemsLength"
+								>{{cartItemsLength }}</span
 							></router-link
 						>
 
 						<div v-if="user.token">
-							<b-dropdown id="dropdown-1" text="Profile" class=" ">
+							<b-dropdown id="dropdown-1" :text="username" class=" ">
 								<b-dropdown-item>Dashboard</b-dropdown-item>
-								<b-dropdown-item>{{ user.username }}</b-dropdown-item>
+								<b-dropdown-item>
+									<router-link class="btn" to="/profile">{{
+										username
+									}}</router-link>
+								</b-dropdown-item>
 								<b-dropdown-divider></b-dropdown-divider>
 								<b-dropdown-item>
 									<button @click="logout" type="button" class="btn btn">
@@ -59,31 +63,46 @@
 </template>
 
 <script>
+import { capitalize } from 'vue';
 import { mapGetters, mapActions, mapMutations } from 'vuex';
 export default {
 	name: 'HeaderComponent',
 
-	computed: {
-		...mapGetters(['cartItems', 'error', 'user']),
+	data() {
+		return {
+			lastLocation: '',
+		};
+	},
 
-		filteredCartItems() {
-			return this.cartItems.filter((item) => item?.username === this.user?.username);
+	computed: {
+		...mapGetters(['cartItems', 'error', 'user', 'userInfo']),
+
+		username() {
+			return capitalize(this.user.username).split('@')[0];
+		},
+
+		userLoggedIn() {
+			return !!this.user.token;
+		},
+
+		cartItemsLength() {
+			return this.$store.state.cart.cartItems.length;
 		}
 	},
 
 	methods: {
-		...mapActions(['clearError', 'logoutUser']),
-		...mapMutations(['setCartItems', 'setUser']),
+		...mapActions(['clearError', 'logoutUser', 'getUserInfo']),
+		...mapMutations(['setCartItems', 'setUser', 'setLastLocation', 'setCart']),
 
 		async logout() {
 			await this.logoutUser();
 			this.$router.push('/?page=1');
 		},
 
-		loadCartItems() {
-			const cartItemsStorage = JSON.parse(localStorage.getItem('cartItems')) || [];
-			const cart = cartItemsStorage.filter((item) => item?.username === this.user?.username);
-			this.setCartItems(cart);
+		getLastLocation(path) {
+			localStorage.setItem('lastLocation', path);
+			this.lastLocation = localStorage.getItem('lastLocation');
+			this.setLastLocation(this.lastLocation);
 		},
 	},
 
@@ -93,7 +112,11 @@ export default {
 			this.setUser(userInfo);
 		}
 
-		this.loadCartItems();
+		if (this.user && this.user.name) {
+			this.getUserInfo();
+		}
+
+		this.setCart()
 	},
 
 	watch: {
@@ -105,9 +128,17 @@ export default {
 			}
 		},
 
+		$route(to, from) {
+			if (from.path !== this.lastLocation) {
+				console.log(from);
+				console.log(to);
+				this.getLastLocation(from.path);
+			}
+		},
+
 		user(newUser) {
 			if (newUser) {
-				this.loadCartItems();
+				this.setCart();
 			}
 		},
 	},
