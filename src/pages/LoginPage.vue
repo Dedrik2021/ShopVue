@@ -5,24 +5,14 @@
 		<div class="login-page">
 			<h2>{{ $route.path === '/login' ? 'Login' : 'Register' }}</h2>
 			<form @submit.prevent="$route.path === '/login' ? handleLogin() : handleRegister()">
-				<div class="form-group mb-2" v-if="$route.path === '/register'">
-					<label for="name">Name</label>
-					<input type="text" class="form-control" id="name" v-model="name" />
-				</div>
-				<div class="form-group mb-2">
-					<label for="email">Email address</label>
-					<input type="email" class="form-control" id="email" v-model="email" required />
-				</div>
-				<div class="form-group mb-3">
-					<label for="password">Password</label>
-					<input
-						type="password"
-						class="form-control"
-						id="password"
-						v-model="password"
-						required
-					/>
-				</div>
+				
+				<input-form v-if="$route.path === '/register'" label="Name" name="name" v-model="name" />
+
+				<input-form label="Email" name="email" type="email" v-model="email" />
+
+				<input-form label="Password" margin-bottom="20px" name="password" type="password" v-model="password" />
+
+		
 				<div class="d-flex align-items-center " v-if="$route.path === '/login'">
 					<button type="submit" :disabled="status === 'pending'" class="btn btn-primary">
 						<pulse-loader v-if="status === 'pending'" :loading="status === 'pending'" :color="'#fff'" :size="'8px'"></pulse-loader>
@@ -53,13 +43,16 @@ import { mapActions, mapGetters } from 'vuex';
 
 import PulseLoader from 'vue-spinner/src/PulseLoader.vue'
 import MessageVue from '@/components/MessageVue.vue';
+import InputForm from '@/components/InputForm.vue';
 
 export default {
 	name: 'LoginPage',
 
 	components: {
 		MessageVue,
-		PulseLoader
+		PulseLoader,
+		InputForm
+
 	},
 
 	data() {
@@ -71,7 +64,7 @@ export default {
 	},
 
 	computed: {
-		...mapGetters([ 'error', 'status', 'lastLocation' ]),
+		...mapGetters([ 'error', 'status', 'lastLocation', 'user' ]),
 	},
 
 	methods: {
@@ -88,15 +81,25 @@ export default {
 			await this.loginUser({ username: this.email, password: this.password });
 			if (this.error) return
 			await this.clearItems();
-			this.$router.push(this.lastLocation ? this.lastLocation : '/?page=1');
+			this.$router.push(this.lastLocation ? this.lastLocation !== '/login' && this.lastLocation !== '/register' ? this.lastLocation : '/?page=1' : '/?page=1');
 		},
 
 		clearItems() {
 			this.name = '';
 			this.email = '';
 			this.password = '';
-		}
+		},
+
+		ifLoggedIn() {
+			if (this.user && this.user.name) {
+				this.$router.push('/?page=1');
+			}
+		},
 	},
+
+	mounted() {
+		this.ifLoggedIn();
+	}
 };
 </script>
 
