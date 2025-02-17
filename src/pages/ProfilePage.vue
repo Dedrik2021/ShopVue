@@ -9,46 +9,16 @@
 
 						<div class="login-page">
 							<form @submit.prevent="submitHandler" class="shadow p-3 rounded">
-								<div class="form-group mb-2" >
-									<label for="name">Name</label>
-									<input
-										type="text"
-										class="form-control"
-										id="name"
-										v-model="name"
-									/>
-								</div>
-								<div class="form-group mb-2">
-									<label for="email">Email address</label>
-									<input
-										type="email"
-										class="form-control"
-										id="email"
-										v-model="email"
-									/>
-								</div>
-								<div class="form-group mb-3">
-									<label for="password">Password</label>
-									<input
-										type="password"
-										class="form-control"
-										id="password"
-										v-model="password"
-									/>
-								</div>
-								<div class="form-group mb-3">
-									<label class="label" for="confirm-password ">Confirm Password</label>
-									<input
-										type="password"
-										class="form-control"
-										id="confirm-password"
-										v-model="confirmPassword"
-									/>
-								</div>
-                                <button
+
+								<input-form label="Name" name="name" v-model="name" />
+								<input-form label="Email Address" type="email" name="email" v-model="email" />
+								<input-form label="Password" name="password" type="password" v-model="password" />
+								<input-form marginBottom="20px" label="Confirm Password" type="password" name="confirmPassword" v-model="confirmPassword" />
+
+                                <b-button
                                     type="submit"
                                     :disabled="status === 'pending' || userChanged"
-                                    class="btn btn-primary"
+                                    class=""
                                 >
                                     <pulse-loader
                                         v-if="status === 'pending'"
@@ -57,7 +27,7 @@
                                         :size="'8px'"
                                     ></pulse-loader>
                                     <span v-else>Update</span>
-                                </button>
+                                </b-button>
 								
 							</form>
 						</div>
@@ -72,17 +42,19 @@
 </template>
 
 <script>
-import { mapGetters, mapActions } from 'vuex';
+import { mapGetters, mapActions, mapMutations } from 'vuex';
 
 import MessageVue from '@/components/MessageVue.vue';
 import PulseLoader from 'vue-spinner/src/PulseLoader.vue'
+import InputForm from '@/components/InputForm.vue';
 
 export default {
 	name: 'ProfilePage',
 
     components: {
         MessageVue,
-		PulseLoader
+		PulseLoader,
+		InputForm
     },
 
 	data() {
@@ -105,10 +77,11 @@ export default {
 
 	methods: {
 		...mapActions(['getUserInfo', 'updateProfile']),
+		...mapMutations(['setError']),
 
 		async submitHandler() {
 			if (this.password !== this.confirmPassword) {
-				this.message = 'Passwords do not match';
+				this.setError('Passwords do not match');
 			} else {
 
 				if (this.user.name !== this.name || this.user.email !== this.email || this.password !== '') {
