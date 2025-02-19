@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<router-link to="/" class="btn btn-light my-3">Go Back</router-link>
+		<router-link :to="lastLocation" class="btn btn-light my-3">Go Back</router-link>
 		<loader-vue v-if="status === 'pending'" />
 		<message-vue v-if="error" :message="error" :type="'danger'" />
 		<div v-else class="d-flex">
@@ -71,7 +71,7 @@
 </template>
 
 <script>
-import { mapGetters, mapActions } from 'vuex';
+import { mapGetters, mapActions, mapMutations } from 'vuex';
 import RatingVue from '../components/RatingVue.vue';
 import LoaderVue from '../components/LoaderVue.vue';
 import MessageVue from '../components/MessageVue.vue';
@@ -91,7 +91,7 @@ export default {
 	},
 
 	computed: {
-		...mapGetters(['productById', 'user']),
+		...mapGetters(['productById', 'user', 'lastLocation']),
 		product() {
 			return this.productById;
 		},
@@ -105,14 +105,21 @@ export default {
 	},
 	methods: {
 		...mapActions(['fetchProductById', 'addItemToCart']),
+		...mapMutations(['setCart']),
 
 		changeQtyHandler(e) {
 			this.qty = e.target.value;
 		},
 
 		async addToCartHandler() {
-			const cartItems = JSON.parse(localStorage.getItem('cartItems')) ? JSON.parse(localStorage.getItem('cartItems')) : [];
-			await this.addItemToCart({ id: this.$route.params.id, qty: this.qty, username: this.user.username, cartItems });
+			
+			if (!this.user || !this.user.name) {
+				this.$router.push('/login');
+				return;
+			}
+
+			await this.addItemToCart({ id: this.$route.params.id, qty: this.qty, username: this.user.username, cartItems: this.$store.state.cart.cartItems });
+			this.setCart();
 			await this.$router.push(`/cart/${this.$route.params.id}?qty=${this.qty}`)
 		},
 	},
